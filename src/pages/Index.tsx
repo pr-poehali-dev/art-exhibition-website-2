@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import Icon from '@/components/ui/icon';
 
 interface Artwork {
@@ -13,11 +15,14 @@ interface Artwork {
   title: string;
   artist: string;
   price: string;
+  priceNumber: number;
   image: string;
   description: string;
   status: 'available' | 'reserved' | 'sold';
   dimensions: string;
   year: string;
+  style: string;
+  category: string;
 }
 
 const artworks: Artwork[] = [
@@ -26,33 +31,84 @@ const artworks: Artwork[] = [
     title: 'Утренние грёзы',
     artist: 'Анна Петрова',
     price: '85 000 ₽',
+    priceNumber: 85000,
     image: '/img/52f4ec75-eb34-4f0f-b942-f627f1b2c412.jpg',
     description: 'Импрессионистическая работа, выполненная в нежных пастельных тонах. Передаёт атмосферу тихого утра в горах.',
     status: 'available',
     dimensions: '70×50 см',
-    year: '2024'
+    year: '2024',
+    style: 'Импрессионизм',
+    category: 'Пейзаж'
   },
   {
     id: '2',
     title: 'Геометрия чувств',
     artist: 'Михаил Волков',
     price: '120 000 ₽',
+    priceNumber: 120000,
     image: '/img/4992968f-dd89-41d2-b35e-3653a727bdd9.jpg',
     description: 'Современная абстракция, исследующая взаимосвязь формы и эмоций через минималистичную композицию.',
     status: 'available',
     dimensions: '80×60 см',
-    year: '2024'
+    year: '2024',
+    style: 'Абстракционизм',
+    category: 'Абстракция'
   },
   {
     id: '3',
     title: 'Классическая элегантность',
     artist: 'Елена Смирнова',
     price: '95 000 ₽',
+    priceNumber: 95000,
     image: '/img/eae12344-2998-4c39-a9cc-69e16aeef240.jpg',
     description: 'Изысканный натюрморт в традициях старых мастеров, выполненный с особым вниманием к деталям.',
     status: 'reserved',
     dimensions: '60×80 см',
-    year: '2023'
+    year: '2023',
+    style: 'Классический',
+    category: 'Натюрморт'
+  },
+  {
+    id: '4',
+    title: 'Морская тишина',
+    artist: 'Анна Петрова',
+    price: '75 000 ₽',
+    priceNumber: 75000,
+    image: '/img/52f4ec75-eb34-4f0f-b942-f627f1b2c412.jpg',
+    description: 'Умиротворяющий морской пейзаж в импрессионистическом стиле.',
+    status: 'available',
+    dimensions: '60×40 см',
+    year: '2024',
+    style: 'Импрессионизм',
+    category: 'Пейзаж'
+  },
+  {
+    id: '5',
+    title: 'Городские ритмы',
+    artist: 'Михаил Волков',
+    price: '110 000 ₽',
+    priceNumber: 110000,
+    image: '/img/4992968f-dd89-41d2-b35e-3653a727bdd9.jpg',
+    description: 'Динамичная композиция, отражающая энергию современного города.',
+    status: 'available',
+    dimensions: '90×70 см',
+    year: '2024',
+    style: 'Модернизм',
+    category: 'Городской пейзаж'
+  },
+  {
+    id: '6',
+    title: 'Весенний букет',
+    artist: 'Елена Смирнова',
+    price: '65 000 ₽',
+    priceNumber: 65000,
+    image: '/img/eae12344-2998-4c39-a9cc-69e16aeef240.jpg',
+    description: 'Нежный весенний натюрморт с полевыми цветами.',
+    status: 'available',
+    dimensions: '50×60 см',
+    year: '2024',
+    style: 'Реализм',
+    category: 'Натюрморт'
   }
 ];
 
@@ -95,6 +151,48 @@ export default function Index() {
     phone: '',
     message: ''
   });
+  
+  // Фильтры
+  const [selectedStyle, setSelectedStyle] = useState<string>('all');
+  const [selectedArtist, setSelectedArtist] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [priceRange, setPriceRange] = useState<number[]>([50000, 150000]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Получение уникальных значений для фильтров
+  const styles = useMemo(() => 
+    Array.from(new Set(artworks.map(artwork => artwork.style))), []
+  );
+  const artists = useMemo(() => 
+    Array.from(new Set(artworks.map(artwork => artwork.artist))), []
+  );
+  const categories = useMemo(() => 
+    Array.from(new Set(artworks.map(artwork => artwork.category))), []
+  );
+  
+  // Фильтрованные произведения
+  const filteredArtworks = useMemo(() => {
+    return artworks.filter(artwork => {
+      const matchesStyle = selectedStyle === 'all' || artwork.style === selectedStyle;
+      const matchesArtist = selectedArtist === 'all' || artwork.artist === selectedArtist;
+      const matchesCategory = selectedCategory === 'all' || artwork.category === selectedCategory;
+      const matchesPrice = artwork.priceNumber >= priceRange[0] && artwork.priceNumber <= priceRange[1];
+      const matchesSearch = searchQuery === '' || 
+        artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        artwork.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        artwork.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return matchesStyle && matchesArtist && matchesCategory && matchesPrice && matchesSearch;
+    });
+  }, [selectedStyle, selectedArtist, selectedCategory, priceRange, searchQuery]);
+  
+  const clearFilters = () => {
+    setSelectedStyle('all');
+    setSelectedArtist('all');
+    setSelectedCategory('all');
+    setPriceRange([50000, 150000]);
+    setSearchQuery('');
+  };
 
   const handleReservation = (artwork: Artwork) => {
     setSelectedArtwork(artwork);
@@ -153,8 +251,115 @@ export default function Index() {
             </p>
           </div>
 
+          {/* Фильтры */}
+          <div className="mb-12">
+            <Card className="rounded-3xl border-0 shadow-lg bg-card p-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Поиск */}
+                <div className="lg:col-span-4">
+                  <Label htmlFor="search" className="text-sm font-medium text-primary mb-2 block">
+                    Поиск
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="search"
+                      placeholder="Поиск по названию, художнику..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="rounded-2xl pl-10"
+                    />
+                    <Icon name="Search" size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                </div>
+                
+                {/* Стиль */}
+                <div>
+                  <Label className="text-sm font-medium text-primary mb-2 block">
+                    Стиль
+                  </Label>
+                  <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                    <SelectTrigger className="rounded-2xl">
+                      <SelectValue placeholder="Все стили" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все стили</SelectItem>
+                      {styles.map(style => (
+                        <SelectItem key={style} value={style}>{style}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Художник */}
+                <div>
+                  <Label className="text-sm font-medium text-primary mb-2 block">
+                    Художник
+                  </Label>
+                  <Select value={selectedArtist} onValueChange={setSelectedArtist}>
+                    <SelectTrigger className="rounded-2xl">
+                      <SelectValue placeholder="Все художники" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все художники</SelectItem>
+                      {artists.map(artist => (
+                        <SelectItem key={artist} value={artist}>{artist}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Категория */}
+                <div>
+                  <Label className="text-sm font-medium text-primary mb-2 block">
+                    Категория
+                  </Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="rounded-2xl">
+                      <SelectValue placeholder="Все категории" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все категории</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Ценовой диапазон */}
+                <div>
+                  <Label className="text-sm font-medium text-primary mb-2 block">
+                    Цена: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} ₽
+                  </Label>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    max={150000}
+                    min={50000}
+                    step={5000}
+                    className="mt-4"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-border">
+                <div className="text-sm text-muted-foreground">
+                  Найдено произведений: {filteredArtworks.length}
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className="rounded-2xl"
+                >
+                  <Icon name="X" className="mr-2" size={16} />
+                  Очистить фильтры
+                </Button>
+              </div>
+            </Card>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {artworks.map((artwork) => (
+            {filteredArtworks.map((artwork) => (
               <Card key={artwork.id} className="overflow-hidden rounded-3xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img 
@@ -168,6 +373,14 @@ export default function Index() {
                     <div>
                       <h3 className="font-display font-medium text-xl text-primary mb-1">{artwork.title}</h3>
                       <p className="text-muted-foreground">{artwork.artist}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs rounded-full">
+                          {artwork.style}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs rounded-full">
+                          {artwork.category}
+                        </Badge>
+                      </div>
                     </div>
                     <Badge 
                       variant={artwork.status === 'available' ? 'default' : artwork.status === 'reserved' ? 'secondary' : 'destructive'}
